@@ -11,7 +11,6 @@ import tellh.com.stickyheaderview_rv.adapter.ViewBinder;
  */
 
 public class ItemHeaderViewBinder extends ViewBinder<ItemHeader, ItemHeaderViewBinder.ViewHolder> {
-    private TextView tvPrefix;
 
     @Override
     public ViewHolder provideViewHolder(View itemView) {
