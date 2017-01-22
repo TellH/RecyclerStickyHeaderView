@@ -4,6 +4,16 @@ public class User extends DataBean {
     private String login;
     private int id;
     private String avatar_url;
+    private boolean shouldSticky;
+
+    public User() {
+    }
+
+    public User(String login, int id, String avatar_url) {
+        this.login = login;
+        this.id = id;
+        this.avatar_url = avatar_url;
+    }
 
     public String getAvatar_url() {
         return avatar_url;
@@ -34,11 +44,13 @@ public class User extends DataBean {
         return R.layout.item_user;
     }
 
+    public void setShouldSticky(boolean shouldSticky) {
+        this.shouldSticky = shouldSticky;
+    }
+
     @Override
     protected boolean shouldSticky() {
-        if (id == 1269143)
-            return true;
-        return super.shouldSticky();
+        return shouldSticky;
     }
 
     public static String dataSource = "{\"items\": [\n" +

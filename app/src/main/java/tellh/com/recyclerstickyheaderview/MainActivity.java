@@ -16,8 +16,6 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private RecyclerView rv;
-    private LinearLayoutManager linearLayoutManager;
-    private StickyHeaderView stickyHeaderView;
     private StickyHeaderViewAdapter adapter;
 
     @Override
@@ -58,8 +56,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initView() {
         rv = (RecyclerView) findViewById(R.id.recyclerView);
-        stickyHeaderView = (StickyHeaderView) findViewById(R.id.stickyHeaderView);
-        linearLayoutManager = new LinearLayoutManager(this);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         rv.setLayoutManager(linearLayoutManager);
     }
 
@@ -73,11 +70,10 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_add_view:
-//                stickyHeaderView.clearHeaderView();
-//                stickyHeaderView.updateHeaderView(R.layout.header, entity, position);
-                break;
-            case R.id.action_remove_view:
-                stickyHeaderView.clearHeaderView();
+                User user = new User("Sticky View", 123, "https://avatars.githubusercontent.com/u/15800681?v=3");
+                user.setShouldSticky(true);
+                adapter.getDisplayList().add(3, user);
+                adapter.notifyItemInserted(3);
                 break;
             default:
                 break;

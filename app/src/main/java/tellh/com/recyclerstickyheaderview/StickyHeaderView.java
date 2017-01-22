@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +27,7 @@ public class StickyHeaderView extends FrameLayout {
     private StickyHeaderViewAdapter adapter;
     private LinearLayoutManager layoutManager;
     private Stack<Integer> stickyHeaderPositionStack = new Stack<>();
+    private LruCache<Integer, RecyclerView.ViewHolder> mViewHolderCache;
 
     public StickyHeaderView(Context context) {
         super(context);
@@ -53,54 +55,61 @@ public class StickyHeaderView extends FrameLayout {
         mHeaderContainer.setLayoutParams(
                 new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         addView(mHeaderContainer);
-        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-                if (mHeaderHeight == -1 || mHeaderHeight == 0 || adapter == null || layoutManager == null) {
-                    mHeaderHeight = mHeaderContainer.getHeight();
-                    adapter = (StickyHeaderViewAdapter) mRecyclerView.getAdapter();
-                    layoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
-                    if (adapter != null)
-                        stickyHeaderPositionStack.push(findFirstVisibleStickyHeaderPosition(adapter.displayList, 0));
-                }
-            }
-
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                if (mHeaderHeight == -1 || adapter == null || layoutManager == null)
-                    return;
-                List<DataBean> displayList = adapter.getDisplayList();
-                int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
-                int firstVisibleStickyHeaderPosition = findFirstVisibleStickyHeaderPosition(displayList, firstVisibleItemPosition);
-                int currentStickyHeaderPosition = stickyHeaderPositionStack.peek();
-                if (firstVisibleStickyHeaderPosition - firstVisibleItemPosition > 1) {
-                    return;
-                }
-                View firstVisibleStickyHeader = layoutManager.findViewByPosition(firstVisibleStickyHeaderPosition);
-                if (firstVisibleStickyHeader == null)
-                    return;
-                int headerTop = firstVisibleStickyHeader.getTop();
-                if (headerTop > 0 && headerTop <= mHeaderHeight) {
-                    mHeaderContainer.setY(-(mHeaderHeight - headerTop));
-                    if (firstVisibleStickyHeaderPosition == currentStickyHeaderPosition) {
-                        stickyHeaderPositionStack.pop();
-                        if (!stickyHeaderPositionStack.isEmpty())
-                            updateHeaderView(stickyHeaderPositionStack.peek());
+        mRecyclerView.addOnScrollListener(
+                new RecyclerView.OnScrollListener() {
+                    @Override
+                    public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                        super.onScrollStateChanged(recyclerView, newState);
+                        if (mHeaderHeight == -1 || mHeaderHeight == 0 || adapter == null || layoutManager == null) {
+                            mHeaderHeight = mHeaderContainer.getHeight();
+                            adapter = (StickyHeaderViewAdapter) mRecyclerView.getAdapter();
+                            layoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+                            if (adapter != null) {
+                                mViewHolderCache = new LruCache<>(adapter.getItemCount() / 3);
+                            }
+                        }
                     }
-                } else if (headerTop <= 0) {
-                    mHeaderContainer.setY(0);
-                    updateHeaderView(firstVisibleItemPosition);
-                }
 
-                // Cache the StickyHeader position.
-                if (firstVisibleStickyHeaderPosition > currentStickyHeaderPosition)
-                    stickyHeaderPositionStack.push(firstVisibleStickyHeaderPosition);
-                else if (firstVisibleStickyHeaderPosition < currentStickyHeaderPosition)
-                    stickyHeaderPositionStack.pop();
+                    @Override
+                    public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                        super.onScrolled(recyclerView, dx, dy);
+                        if (mHeaderHeight == -1 || adapter == null || layoutManager == null)
+                            return;
+                        List<DataBean> displayList = adapter.getDisplayList();
+                        if (stickyHeaderPositionStack.isEmpty())
+                            stickyHeaderPositionStack.push(findFirstVisibleStickyHeaderPosition(adapter.displayList, 0));
+                        int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
+                        int firstVisibleStickyHeaderPosition = findFirstVisibleStickyHeaderPosition(displayList, firstVisibleItemPosition);
+                        int currentStickyHeaderPosition = stickyHeaderPositionStack.peek();
+                        if (firstVisibleStickyHeaderPosition - firstVisibleItemPosition > 1) {
+                            return;
+                        }
+                        // 如果两个连续两个都是StickyView, 取下面那个View
+                        if (displayList.get(firstVisibleStickyHeaderPosition + 1).shouldSticky())
+                            firstVisibleStickyHeaderPosition++;
+                        View firstVisibleStickyHeader = layoutManager.findViewByPosition(firstVisibleStickyHeaderPosition);
+                        if (firstVisibleStickyHeader == null)
+                            return;
+                        int headerTop = firstVisibleStickyHeader.getTop();
+                        if (headerTop > 0 && headerTop <= mHeaderHeight) {
+                            mHeaderContainer.setY(-(mHeaderHeight - headerTop));
+                            if (firstVisibleStickyHeaderPosition == currentStickyHeaderPosition) {
+                                stickyHeaderPositionStack.pop();
+                                if (!stickyHeaderPositionStack.isEmpty())
+                                    updateHeaderView(stickyHeaderPositionStack.peek());
+                            }
+                        } else if (headerTop <= 0) {
+                            mHeaderContainer.setY(0);
+                            updateHeaderView(firstVisibleItemPosition);
+                        }
+
+                        // Cache the StickyHeader position.
+                        if (firstVisibleStickyHeaderPosition > currentStickyHeaderPosition)
+                            stickyHeaderPositionStack.push(firstVisibleStickyHeaderPosition);
+                        else if (firstVisibleStickyHeaderPosition < currentStickyHeaderPosition)
+                            stickyHeaderPositionStack.pop();
+                    }
                 }
-            }
 
         );
 
@@ -116,19 +125,24 @@ public class StickyHeaderView extends FrameLayout {
         return i;
     }
 
-    public void updateHeaderView(int position) {
+    private void updateHeaderView(int position) {
         DataBean entity = adapter.getDisplayList().get(position);
         int layoutId = entity.getItemLayoutId(adapter);
         clearHeaderView();
-        View v = LayoutInflater.from(mHeaderContainer.getContext())
-                .inflate(layoutId, mHeaderContainer, false);
-        mHeaderContainer.addView(v);
-        mHeaderHeight = mHeaderContainer.getHeight();
+        RecyclerView.ViewHolder viewHolder = mViewHolderCache.get(layoutId);
         ViewBinder headerViewBinder = adapter.getViewBinder(layoutId);
-        headerViewBinder.bindView(adapter, headerViewBinder.provideViewHolder(v), position, entity);
+        if (viewHolder == null) {
+            View v = LayoutInflater.from(mHeaderContainer.getContext())
+                    .inflate(layoutId, mHeaderContainer, false);
+            viewHolder = headerViewBinder.provideViewHolder(v);
+            mViewHolderCache.put(layoutId, viewHolder);
+        }
+        mHeaderContainer.addView(viewHolder.itemView);
+        mHeaderHeight = mHeaderContainer.getHeight();
+        headerViewBinder.bindView(adapter, viewHolder, position, entity);
     }
 
-    public void clearHeaderView() {
+    private void clearHeaderView() {
         mHeaderContainer.removeAllViews();
     }
 
