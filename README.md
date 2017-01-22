@@ -1,7 +1,8 @@
 # RecyclerStickyHeaderView
 [![](https://jitpack.io/v/TellH/RecyclerStickyHeaderView.svg)](https://jitpack.io/#TellH/RecyclerStickyHeaderView)<br>
 Sticky header view or suspending view for RecyclerView.<br>
-
+[StickyListHeaders](https://github.com/emilsjolander/StickyListHeaders)  is an Android library that makes it easy to integrate section headers
+ stick to the top in ListView. Inspire by it, I setup this project to implement the same effect in RecyclerView.
 ## Effect
 ![](https://raw.githubusercontent.com/TellH/RecyclerStickyHeaderView/master/raw/effect.gif)
 
@@ -118,6 +119,10 @@ public class ItemHeaderViewBinder extends ViewBinder<ItemHeader, ItemHeaderViewB
 That is all. 
 
 Please check out the Demo and source code for more information. If you have any question, feel free to raise an issue. Thanks a lot!
+
+## Thanks
+- [SuspensionBar](https://github.com/wuapnjie/SuspensionBar)
+- [NoListAdapter](https://github.com/TellH/NoListAdapter)
 
 ## License
    Copyright 2016 TellH
