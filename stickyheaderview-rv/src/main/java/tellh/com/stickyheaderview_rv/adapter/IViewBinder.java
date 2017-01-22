@@ -1,4 +1,4 @@
-package tellh.com.recyclerstickyheaderview;
+package tellh.com.stickyheaderview_rv.adapter;
 
 import android.view.View;
 

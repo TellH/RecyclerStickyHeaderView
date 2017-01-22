@@ -1,5 +1,8 @@
 package tellh.com.recyclerstickyheaderview;
 
+import tellh.com.stickyheaderview_rv.adapter.DataBean;
+import tellh.com.stickyheaderview_rv.adapter.StickyHeaderViewAdapter;
+
 /**
  * Created by tlh on 2017/1/22 :)
  */

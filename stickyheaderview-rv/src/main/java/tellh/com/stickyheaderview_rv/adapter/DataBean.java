@@ -1,4 +1,4 @@
-package tellh.com.recyclerstickyheaderview;
+package tellh.com.stickyheaderview_rv.adapter;
 
 import android.support.v4.util.SparseArrayCompat;
 
@@ -13,7 +13,7 @@ public abstract class DataBean implements IViewBinderProvider, LayoutItemType {
         return viewBinder;
     }
 
-    protected boolean shouldSticky() {
+    public boolean shouldSticky() {
         return false;
     }
 }

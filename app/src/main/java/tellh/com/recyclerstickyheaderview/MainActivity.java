@@ -14,6 +14,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import tellh.com.stickyheaderview_rv.adapter.DataBean;
+import tellh.com.stickyheaderview_rv.adapter.StickyHeaderViewAdapter;
+
 public class MainActivity extends AppCompatActivity {
     private RecyclerView rv;
     private StickyHeaderViewAdapter adapter;

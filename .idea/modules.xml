@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/RecyclerStickyHeaderView.iml" filepath="$PROJECT_DIR$/RecyclerStickyHeaderView.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/stickyheaderview-rv/stickyheaderview-rv.iml" filepath="$PROJECT_DIR$/stickyheaderview-rv/stickyheaderview-rv.iml" />
     </modules>
   </component>
 </project>

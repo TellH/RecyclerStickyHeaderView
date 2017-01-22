@@ -1,5 +1,8 @@
 package tellh.com.recyclerstickyheaderview;
 
+import tellh.com.stickyheaderview_rv.adapter.DataBean;
+import tellh.com.stickyheaderview_rv.adapter.StickyHeaderViewAdapter;
+
 public class User extends DataBean {
     private String login;
     private int id;
@@ -49,7 +52,7 @@ public class User extends DataBean {
     }
 
     @Override
-    protected boolean shouldSticky() {
+    public boolean shouldSticky() {
         return shouldSticky;
     }
 

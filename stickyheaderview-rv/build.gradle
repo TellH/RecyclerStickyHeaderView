@@ -1,15 +1,19 @@
-apply plugin: 'com.android.application'
-
+apply plugin: 'com.android.library'
+// JitPack
+apply plugin: 'com.github.dcendents.android-maven'
+group='com.github.TellH'
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.0"
+
     defaultConfig {
-        applicationId "tellh.com.recyclerstickyheaderview"
         minSdkVersion 14
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
+
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
     }
     buildTypes {
         release {
@@ -26,8 +30,6 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:25.1.0'
     compile 'com.android.support:design:25.1.0'
-    compile 'com.google.code.gson:gson:2.7'
-    compile 'com.squareup.picasso:picasso:2.5.2'
+    compile "com.android.support:recyclerview-v7:25.1.0"
     testCompile 'junit:junit:4.12'
-    compile project(':stickyheaderview-rv')
 }

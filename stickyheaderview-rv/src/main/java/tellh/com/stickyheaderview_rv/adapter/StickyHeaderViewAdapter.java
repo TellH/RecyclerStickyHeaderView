@@ -1,4 +1,4 @@
-package tellh.com.recyclerstickyheaderview;
+package tellh.com.stickyheaderview_rv.adapter;
 
 import android.support.annotation.LayoutRes;
 import android.support.v4.util.SparseArrayCompat;

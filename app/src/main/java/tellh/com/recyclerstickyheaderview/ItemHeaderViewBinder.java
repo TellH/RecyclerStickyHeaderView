@@ -3,6 +3,9 @@ package tellh.com.recyclerstickyheaderview;
 import android.view.View;
 import android.widget.TextView;
 
+import tellh.com.stickyheaderview_rv.adapter.StickyHeaderViewAdapter;
+import tellh.com.stickyheaderview_rv.adapter.ViewBinder;
+
 /**
  * Created by tlh on 2017/1/22 :)
  */

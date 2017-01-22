@@ -1,4 +1,4 @@
-package tellh.com.recyclerstickyheaderview;
+package tellh.com.stickyheaderview_rv;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -14,14 +14,18 @@ import android.widget.FrameLayout;
 import java.util.List;
 import java.util.Stack;
 
+import tellh.com.stickyheaderview_rv.adapter.DataBean;
+import tellh.com.stickyheaderview_rv.adapter.StickyHeaderViewAdapter;
+import tellh.com.stickyheaderview_rv.adapter.ViewBinder;
+
 /**
  * Created by tlh on 2017/1/21 :)
  */
 
 public class StickyHeaderView extends FrameLayout {
     private static final String TAG = "StickyHeaderView";
-    private FrameLayout mHeaderContainer;
     private boolean hasInit = false;
+    private FrameLayout mHeaderContainer;
     private RecyclerView mRecyclerView;
     private int mHeaderHeight = -1;
     private StickyHeaderViewAdapter adapter;
@@ -77,7 +81,7 @@ public class StickyHeaderView extends FrameLayout {
                             return;
                         List<DataBean> displayList = adapter.getDisplayList();
                         if (stickyHeaderPositionStack.isEmpty())
-                            stickyHeaderPositionStack.push(findFirstVisibleStickyHeaderPosition(adapter.displayList, 0));
+                            stickyHeaderPositionStack.push(findFirstVisibleStickyHeaderPosition(displayList, 0));
                         int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
                         int firstVisibleStickyHeaderPosition = findFirstVisibleStickyHeaderPosition(displayList, firstVisibleItemPosition);
                         int currentStickyHeaderPosition = stickyHeaderPositionStack.peek();
@@ -91,14 +95,14 @@ public class StickyHeaderView extends FrameLayout {
                         if (firstVisibleStickyHeader == null)
                             return;
                         int headerTop = firstVisibleStickyHeader.getTop();
-                        if (headerTop > 0 && headerTop <= mHeaderHeight) {
+                        if (headerTop > 0 && headerTop <= mHeaderHeight) { //吸顶正在更替的状态
                             mHeaderContainer.setY(-(mHeaderHeight - headerTop));
                             if (firstVisibleStickyHeaderPosition == currentStickyHeaderPosition) {
                                 stickyHeaderPositionStack.pop();
                                 if (!stickyHeaderPositionStack.isEmpty())
                                     updateHeaderView(stickyHeaderPositionStack.peek());
                             }
-                        } else if (headerTop <= 0) {
+                        } else if (headerTop <= 0) {  //吸顶稳定在最上方的状态
                             mHeaderContainer.setY(0);
                             updateHeaderView(firstVisibleItemPosition);
                         }
