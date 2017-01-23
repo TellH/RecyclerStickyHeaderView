@@ -5,7 +5,7 @@ import android.graphics.Color;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
-import android.util.LruCache;
+import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,7 +31,7 @@ public class StickyHeaderView extends FrameLayout {
     private StickyHeaderViewAdapter adapter;
     private LinearLayoutManager layoutManager;
     private Stack<Integer> stickyHeaderPositionStack = new Stack<>();
-    private LruCache<Integer, RecyclerView.ViewHolder> mViewHolderCache;
+    private SparseArray<RecyclerView.ViewHolder> mViewHolderCache;
 
     public StickyHeaderView(Context context) {
         super(context);
@@ -68,9 +68,7 @@ public class StickyHeaderView extends FrameLayout {
                             mHeaderHeight = mHeaderContainer.getHeight();
                             adapter = (StickyHeaderViewAdapter) mRecyclerView.getAdapter();
                             layoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
-                            if (adapter != null) {
-                                mViewHolderCache = new LruCache<>(adapter.getItemCount() / 3);
-                            }
+                            mViewHolderCache = new SparseArray<>();
                         }
                     }
 
