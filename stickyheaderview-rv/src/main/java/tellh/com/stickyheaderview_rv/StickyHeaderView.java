@@ -23,7 +23,6 @@ import tellh.com.stickyheaderview_rv.adapter.ViewBinder;
  */
 
 public class StickyHeaderView extends FrameLayout {
-    private static final String TAG = "StickyHeaderView";
     private boolean hasInit = false;
     private FrameLayout mHeaderContainer;
     private RecyclerView mRecyclerView;
@@ -64,12 +63,19 @@ public class StickyHeaderView extends FrameLayout {
                     @Override
                     public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                         super.onScrollStateChanged(recyclerView, newState);
-                        if (mHeaderHeight == -1 || mHeaderHeight == 0 || adapter == null || layoutManager == null) {
+                        if (mHeaderHeight == -1 || adapter == null || layoutManager == null) {
                             mHeaderHeight = mHeaderContainer.getHeight();
-                            adapter = (StickyHeaderViewAdapter) mRecyclerView.getAdapter();
+                            RecyclerView.Adapter adapter = mRecyclerView.getAdapter();
+                            if (!(adapter instanceof StickyHeaderViewAdapter))
+                                throw new RuntimeException
+                                        ("Your RecyclerView.Adapter should be the type of StickyHeaderViewAdapter.");
+                            StickyHeaderView.this.adapter = (StickyHeaderViewAdapter) adapter;
                             layoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
                             mViewHolderCache = new SparseArray<>();
-                        }
+                        } /*else if (mHeaderHeight == 0) {
+                            mHeaderHeight = mHeaderContainer.getHeight();
+                        }*/
+
                     }
 
                     @Override

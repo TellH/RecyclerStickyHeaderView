@@ -105,7 +105,7 @@ public class ItemHeaderViewBinder extends ViewBinder<ItemHeader, ItemHeaderViewB
 }
 ```
 
-- Create StickyHeaderViewAdapter for RecyclerView and register ViewBinders for each item types.
+- Instantiate StickyHeaderViewAdapter for RecyclerView and register ViewBinders for each item types.
 ``` java
         rv = (RecyclerView) findViewById(R.id.recyclerView);
         rv.setLayoutManager(new LinearLayoutManager(this));
