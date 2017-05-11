@@ -8,13 +8,13 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class StickyHeaderViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static int SIZE_VIEW_BINDER_POOL = 10;
     private SparseArrayCompat<ViewBinder> viewBinderPool;
     protected List<DataBean> displayList;
+    private DataSetChangeListener onDataSetChangeListener;
 
     public StickyHeaderViewAdapter(List<? extends DataBean> displayList) {
         viewBinderPool = new SparseArrayCompat<>(SIZE_VIEW_BINDER_POOL);
@@ -23,8 +23,22 @@ public class StickyHeaderViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         this.displayList.addAll(displayList);
     }
 
-    public List<DataBean> getDisplayList() {
+    private List<DataBean> getDisplayList() {
         return displayList;
+    }
+
+    public int getDisplayListSize() {
+        return displayList == null ? 0 : displayList.size();
+    }
+
+    public DataBean get(int i) {
+        if (i < getDisplayListSize())
+            return displayList.get(i);
+        else return null;
+    }
+
+    public int getPosition(DataBean dataBean) {
+        return displayList.indexOf(dataBean);
     }
 
     @Override
@@ -69,37 +83,35 @@ public class StickyHeaderViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         viewBinderPool.clear();
     }
 
-    public void addAll(List<? extends DataBean> list) {
+    public void append(List<? extends DataBean> list) {
         if (list == null)
             return;
         displayList.addAll(list);
         notifyDataSetChanged();
+    }
+
+    public void append(DataBean dataBean) {
+        displayList.add(dataBean);
+        notifyItemInserted(displayList.size() - 1);
     }
 
     public void refresh(List<? extends DataBean> list) {
         if (list == null)
             return;
+        onDataSetChangeListener.onClearAll();
         displayList.clear();
         displayList.addAll(list);
         notifyDataSetChanged();
     }
 
-    public void add(int pos, DataBean item) {
-        displayList.add(pos, item);
-        notifyItemInserted(pos);
-    }
-
     public void delete(int pos) {
+        onDataSetChangeListener.remove(pos);
         displayList.remove(pos);
         notifyItemRemoved(pos);
     }
 
-    public void swap(int fromPosition, int toPosition) {
-        Collections.swap(displayList, fromPosition, toPosition);
-        notifyItemMoved(fromPosition, toPosition);
-    }
-
     public void clear(RecyclerView recyclerView) {
+        onDataSetChangeListener.onClearAll();
         displayList.clear();
         notifyDataSetChanged();
         recyclerView.scrollToPosition(0);
@@ -108,5 +120,16 @@ public class StickyHeaderViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     public StickyHeaderViewAdapter RegisterItemType(ViewBinder viewBinder) {
         viewBinderPool.put(viewBinder.getItemLayoutId(this), viewBinder);
         return this;
+    }
+
+    // Don't Call this Method
+    public void setDataSetChangeListener(DataSetChangeListener listener) {
+        this.onDataSetChangeListener = listener;
+    }
+
+    public interface DataSetChangeListener {
+        void onClearAll();
+
+        void remove(int pos);
     }
 }

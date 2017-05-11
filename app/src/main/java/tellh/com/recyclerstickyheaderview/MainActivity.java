@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
 
 import tellh.com.stickyheaderview_rv.adapter.DataBean;
 import tellh.com.stickyheaderview_rv.adapter.StickyHeaderViewAdapter;
@@ -20,6 +21,7 @@ import tellh.com.stickyheaderview_rv.adapter.StickyHeaderViewAdapter;
 public class MainActivity extends AppCompatActivity {
     private RecyclerView rv;
     private StickyHeaderViewAdapter adapter;
+    private Random random = new Random(System.currentTimeMillis());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,9 +76,11 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.action_add_view:
                 User user = new User("Sticky View", 123, "https://avatars.githubusercontent.com/u/15800681?v=3");
-                user.setShouldSticky(true);
-                adapter.getDisplayList().add(3, user);
-                adapter.notifyItemInserted(3);
+                user.setShouldSticky(random.nextBoolean());
+                adapter.append(user);
+                break;
+            case R.id.action_clear_all:
+                adapter.clear(rv);
                 break;
             default:
                 break;

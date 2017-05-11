@@ -11,9 +11,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import java.util.List;
-import java.util.Stack;
-
 import tellh.com.stickyheaderview_rv.adapter.DataBean;
 import tellh.com.stickyheaderview_rv.adapter.StickyHeaderViewAdapter;
 import tellh.com.stickyheaderview_rv.adapter.ViewBinder;
@@ -22,14 +19,15 @@ import tellh.com.stickyheaderview_rv.adapter.ViewBinder;
  * Created by tlh on 2017/1/21 :)
  */
 
-public class StickyHeaderView extends FrameLayout {
+public class StickyHeaderView extends FrameLayout
+        implements StickyHeaderViewAdapter.DataSetChangeListener {
     private boolean hasInit = false;
     private FrameLayout mHeaderContainer;
     private RecyclerView mRecyclerView;
     private int mHeaderHeight = -1;
     private StickyHeaderViewAdapter adapter;
     private LinearLayoutManager layoutManager;
-    private Stack<Integer> stickyHeaderPositionStack = new Stack<>();
+    private LinkListStack<DataBean> stickyHeaderStack = new LinkListStack<>();
     private SparseArray<RecyclerView.ViewHolder> mViewHolderCache;
 
     public StickyHeaderView(Context context) {
@@ -70,6 +68,7 @@ public class StickyHeaderView extends FrameLayout {
                                 throw new RuntimeException
                                         ("Your RecyclerView.Adapter should be the type of StickyHeaderViewAdapter.");
                             StickyHeaderView.this.adapter = (StickyHeaderViewAdapter) adapter;
+                            StickyHeaderView.this.adapter.setDataSetChangeListener(StickyHeaderView.this);
                             layoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
                             mViewHolderCache = new SparseArray<>();
                         } /*else if (mHeaderHeight == 0) {
@@ -83,17 +82,19 @@ public class StickyHeaderView extends FrameLayout {
                         super.onScrolled(recyclerView, dx, dy);
                         if (mHeaderHeight == -1 || adapter == null || layoutManager == null)
                             return;
-                        List<DataBean> displayList = adapter.getDisplayList();
-                        if (stickyHeaderPositionStack.isEmpty())
-                            stickyHeaderPositionStack.push(findFirstVisibleStickyHeaderPosition(displayList, 0));
+                        if (stickyHeaderStack.isEmpty() && adapter.getDisplayListSize() != 0)
+                            stickyHeaderStack.push(adapter.get(findFirstVisibleStickyHeaderPosition(0)));
                         int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
-                        int firstVisibleStickyHeaderPosition = findFirstVisibleStickyHeaderPosition(displayList, firstVisibleItemPosition);
-                        int currentStickyHeaderPosition = stickyHeaderPositionStack.peek();
+                        if (firstVisibleItemPosition == -1)
+                            return;
+                        int firstVisibleStickyHeaderPosition = findFirstVisibleStickyHeaderPosition(firstVisibleItemPosition);
+                        int currentStickyHeaderPosition = adapter.getPosition(stickyHeaderStack.peek());
                         if (firstVisibleStickyHeaderPosition - firstVisibleItemPosition > 1) {
                             return;
                         }
                         // 如果两个连续两个都是StickyView, 取下面那个View
-                        if (displayList.get(firstVisibleStickyHeaderPosition + 1).shouldSticky())
+                        DataBean dataBean = adapter.get(firstVisibleStickyHeaderPosition + 1);
+                        if (dataBean != null && dataBean.shouldSticky())
                             firstVisibleStickyHeaderPosition++;
                         View firstVisibleStickyHeader = layoutManager.findViewByPosition(firstVisibleStickyHeaderPosition);
                         if (firstVisibleStickyHeader == null)
@@ -102,20 +103,20 @@ public class StickyHeaderView extends FrameLayout {
                         if (headerTop > 0 && headerTop <= mHeaderHeight) { //吸顶正在更替的状态
                             mHeaderContainer.setY(-(mHeaderHeight - headerTop));
                             if (firstVisibleStickyHeaderPosition == currentStickyHeaderPosition) {
-                                stickyHeaderPositionStack.pop();
-                                if (!stickyHeaderPositionStack.isEmpty())
-                                    updateHeaderView(stickyHeaderPositionStack.peek());
+                                stickyHeaderStack.pop();
+                                if (!stickyHeaderStack.isEmpty())
+                                    updateHeaderView(stickyHeaderStack.peek());
                             }
                         } else if (headerTop <= 0) {  //吸顶稳定在最上方的状态
                             mHeaderContainer.setY(0);
-                            updateHeaderView(firstVisibleItemPosition);
+                            updateHeaderView(adapter.get(firstVisibleItemPosition));
                         }
 
                         // Cache the StickyHeader position.
                         if (firstVisibleStickyHeaderPosition > currentStickyHeaderPosition)
-                            stickyHeaderPositionStack.push(firstVisibleStickyHeaderPosition);
+                            stickyHeaderStack.push(adapter.get(firstVisibleStickyHeaderPosition));
                         else if (firstVisibleStickyHeaderPosition < currentStickyHeaderPosition)
-                            stickyHeaderPositionStack.pop();
+                            stickyHeaderStack.pop();
                     }
                 }
 
@@ -123,18 +124,17 @@ public class StickyHeaderView extends FrameLayout {
 
     }
 
-    private int findFirstVisibleStickyHeaderPosition(List<DataBean> displayList, int firstVisibleItemPosition) {
+    private int findFirstVisibleStickyHeaderPosition(int firstVisibleItemPosition) {
         int i = firstVisibleItemPosition;
-        for (; i < displayList.size(); i++) {
-            if (!displayList.get(i).shouldSticky())
+        for (; i < adapter.getDisplayListSize(); i++) {
+            if (!adapter.get(i).shouldSticky())
                 continue;
             break;
         }
         return i;
     }
 
-    private void updateHeaderView(int position) {
-        DataBean entity = adapter.getDisplayList().get(position);
+    private void updateHeaderView(DataBean entity) {
         int layoutId = entity.getItemLayoutId(adapter);
         clearHeaderView();
         RecyclerView.ViewHolder viewHolder = mViewHolderCache.get(layoutId);
@@ -147,9 +147,10 @@ public class StickyHeaderView extends FrameLayout {
         }
         mHeaderContainer.addView(viewHolder.itemView);
         mHeaderHeight = mHeaderContainer.getHeight();
-        headerViewBinder.bindView(adapter, viewHolder, position, entity);
+        headerViewBinder.bindView(adapter, viewHolder, adapter.getPosition(entity), entity);
     }
 
+    // Remove the Header View
     private void clearHeaderView() {
         mHeaderContainer.removeAllViews();
     }
@@ -160,4 +161,19 @@ public class StickyHeaderView extends FrameLayout {
         super.onLayout(changed, left, top, right, bottom);
     }
 
+    @Override
+    public void onClearAll() {
+        stickyHeaderStack.clear();
+        clearHeaderView();
+    }
+
+    @Override
+    public void remove(int pos) {
+        DataBean entity = adapter.get(pos);
+        if (stickyHeaderStack.peek() == entity)
+            clearHeaderView();
+        if (entity != null && entity.shouldSticky()) {
+            stickyHeaderStack.remove(entity);
+        }
+    }
 }
