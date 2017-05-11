@@ -21,7 +21,7 @@ allprojects {
 app build.gradle
 ```groovy
 dependencies {
-   compile 'com.github.TellH:RecyclerStickyHeaderView:1.0.0'
+   compile 'com.github.TellH:RecyclerStickyHeaderView:1.1.0'
 }
 ```
 
